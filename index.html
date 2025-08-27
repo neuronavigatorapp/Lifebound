@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Lifebound - Your Adventure Companion</title>
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Lifebound">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #0a0a0f 0%, #1a1a2e 100%);
+            color: #fff;
+            height: 100vh;
+            height: 100dvh;
+            overflow: hidden;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+
+        .app {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            height: 100dvh;
+            max-width: 420px;
+            margin: 0 auto;
+        }
+
+        .header {
+            padding: 20px 20px 16px;
+            text-align: center;
+            border-bottom: 1px solid #333;
+            background: rgba(59, 130, 246, 0.05);
+        }
+
+        .title {
+            font-size: 26px;
+            font-weight: 700;
+            background: linear-gradient(45deg, #3b82f6, #8b5cf6, #ec4899);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 4px;
+        }
+
+        .subtitle {
+            color: #888;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .chat-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            scroll-behavior: smooth;
+        }
+
+        .message {
+            max-width: 85%;
+            padding: 14px 16px;
+            border-radius: 16px;
+            word-wrap: break-word;
+            position: relative;
+            animation: messageSlide 0.3s ease-out;
+        }
+
+        @keyframes messageSlide {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .user-message {
+            background: linear-gradient(135deg, #2563eb, #1d4ed8);
+            align-self: flex-end;
+            margin-left: 15%;
+            color: white;
+        }
+
+        .companion-message {
+            background: #1f2937;
+            border: 1px solid #3b82f6;
+            align-self: flex-start;
+            margin-right: 15%;
+            color: #e5e7eb;
+            box-shadow: 0 0 20px rgba(59, 130, 246, 0.1);
+        }
+
+        .message-text {
+            font-size: 16px;
+            line-height: 1.4;
+            margin-bottom: 6px;
+        }
+
+        .timestamp {
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .typing {
+            color: #3b82f6;
+            font-style: italic;
+            opacity: 0.8;
+        }
+
+        .typing::after {
+            content: "...";
+            animation: dots 1.5s infinite;
+        }
+
+        @keyframes dots {
+            0%, 20% { content: ""; }
+            40% { content: "."; }
+            60% { content: ".."; }
+            80%, 100% { content: "..."; }
+        }
+
+        .quick-actions {
+            display: flex;
+            padding: 16px;
+            gap: 8px;
+            border-top: 1px solid #333;
+            flex-wrap: wrap;
+        }
+
+        .action-btn {
+            background: linear-gradient(135deg, #374151, #4b5563);
+            border: 1px solid #6b7280;
+            padding: 10px 14px;
+            border-radius: 12px;
+            color: #e5e7eb;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            flex: 1;
+            min-width: 100px;
+            text-align: center;
+        }
+
+        .action-btn:hover {
+            background: linear-gradient(135deg, #4b5563, #6b7280);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        .input-area {
+            display: flex;
+            padding: 16px;
+            border-top: 1px solid #333;
+            gap: 12px;
+            align-items: flex-end;
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        .message-input {
+            flex: 1;
+            background: #1f2937;
+            border: 1px solid #374151;
+            padding: 12px 16px;
+            border-radius: 12px;
+            color: #fff;
+            font-size: 16px;
+            max-height: 120px;
+            min-height: 44px;
+            resize: none;
+            font-family: inherit;
+            transition: border-color 0.2s;
+        }
+
+        .message-input:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .send-btn {
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 16px;
+        }
+
+        .send-btn:hover {
+            background: linear-gradient(135deg, #2563eb, #1d4ed8);
+            transform: translateY(-1px);
+        }
+
+        .send-btn:disabled {
+            background: #374151;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .status-bar {
+            padding: 8px 16px;
+            background: rgba(0, 0, 0, 0.5);
+            border-top: 1px solid #333;
+            font-size: 10px;
+            color: #666;
+            text-align: center;
+        }
+
+        /* iOS-specific adjustments */
+        @supports (-webkit-touch-callout: none) {
+            .app {
+                padding-bottom: env(safe-area-inset-bottom);
+            }
+            
+            .input-area {
+                padding-bottom: calc(16px + env(safe-area-inset-bottom));
+            }
+        }
+
+        /* PWA-ready styling */
+        @media (display-mode: standalone) {
+            .header {
+                padding-top: 40px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app">
+        <div class="header">
+            <div class="title">LIFEBOUND</div>
+            <div class="subtitle">Your Adventure Companion</div>
+        </div>
+
+        <div class="chat-container" id="chatContainer">
+            <!-- Messages will be added here dynamically -->
+        </div>
+
+        <div class="quick-actions">
+            <button class="action-btn" onclick="quickMessage('Im feeling overwhelmed')">
+                Overwhelmed
+            </button>
+            <button class="action-btn" onclick="quickMessage('I finished something!')">
+                Victory!
+            </button>
+            <button class="action-btn" onclick="quickMessage('What should I do next?')">
+                Next Quest
+            </button>
+        </div>
+
+        <div class="input-area">
+            <textarea 
+                class="message-input" 
+                id="messageInput"
+                placeholder="Talk to your companion..."
+                rows="1"
+            ></textarea>
+            <button class="send-btn" id="sendBtn" onclick="sendMessage()">
+                Send
+            </button>
+        </div>
+
+        <div class="status-bar" id="statusBar">
+            Messages: 0 | Memory: Ready | Last sync: Never
+        </div>
+    </div>
+
+    <script>
+        class LifeboundCompanion {
+            constructor() {
+                this.messages = [];
+                this.memories = [];
+                this.taskHistory = [];
+                this.init();
+            }
+
+            async init() {
+                await this.loadData();
+                
+                if (this.messages.length === 0) {
+                    this.addCompanionMessage(
+                        "Hey there! I'm your adventure companion. I remember everything we do together and I'm here to help make life feel like the adventure it actually is. What's on your mind today?"
+                    );
+                }
+                
+                this.setupEventListeners();
+                this.updateStatus();
+            }
+
+            async loadData() {
+                try {
+                    const savedMessages = localStorage.getItem('lifebound_messages');
+                    const savedMemories = localStorage.getItem('lifebound_memories');
+                    const savedTasks = localStorage.getItem('lifebound_tasks');
+
+                    if (savedMessages) this.messages = JSON.parse(savedMessages);
+                    if (savedMemories) this.memories = JSON.parse(savedMemories);
+                    if (savedTasks) this.taskHistory = JSON.parse(savedTasks);
+
+                    this.renderMessages();
+                } catch (error) {
+                    console.error('Failed to load data:', error);
+                }
+            }
+
+            saveData() {
+                try {
+                    localStorage.setItem('lifebound_messages', JSON.stringify(this.messages));
+                    localStorage.setItem('lifebound_memories', JSON.stringify(this.memories));
+                    localStorage.setItem('lifebound_tasks', JSON.stringify(this.taskHistory));
+                    this.updateStatus();
+                } catch (error) {
+                    console.error('Failed to save data:', error);
+                }
+            }
+
+            addMessage(text, type) {
+                const message = {
+                    id: Date.now().toString(),
+                    type,
+                    text,
+                    timestamp: new Date()
+                };
+
+                this.messages.push(message);
+                this.saveMemory(text, type);
+                this.renderMessages();
+                this.saveData();
+                
+                return message;
+            }
+
+            addCompanionMessage(text) {
+                this.addMessage(text, 'companion');
+            }
+
+            addUserMessage(text) {
+                this.addMessage(text, 'user');
+            }
+
+            saveMemory(content, speaker) {
+                const memory = {
+                    id: Date.now().toString(),
+                    timestamp: new Date(),
+                    content: `${speaker}: ${content}`,
+                    emotional_context: this.detectEmotionalContext(content),
+                    user_energy: 'medium'
+                };
+
+                this.memories.push(memory);
+                
+                // Keep only last 100 memories for performance
+                if (this.memories.length > 100) {
+                    this.memories = this.memories.slice(-100);
+                }
+            }
+
+            detectEmotionalContext(text) {
+                const input = text.toLowerCase();
+                if (input.includes('excited') || input.includes('great') || input.includes('awesome')) return 'excited';
+                if (input.includes('overwhelmed') || input.includes('too much') || input.includes('stressed')) return 'overwhelmed';
+                if (input.includes('stuck') || input.includes("can't") || input.includes('difficult')) return 'stuck';
+                if (input.includes('finished') || input.includes('done') || input.includes('completed')) return 'accomplished';
+                return 'neutral';
+            }
+
+            generateResponse(userInput) {
+                const input = userInput.toLowerCase();
+                
+                // Check recent struggles and victories
+                const recentStruggles = this.memories
+                    .filter(m => m.emotional_context === 'overwhelmed' || m.emotional_context === 'stuck')
+                    .slice(-2);
+                
+                const recentVictories = this.memories
+                    .filter(m => m.emotional_context === 'accomplished')
+                    .slice(-3);
+
+                if (input.includes('overwhelmed') || input.includes('too much')) {
+                    if (recentStruggles.length > 0) {
+                        return "I remember you've been feeling overwhelmed lately. That's completely normal! Let's break this down together. What feels like the tiniest first step we could take right now?";
+                    } else {
+                        return "I can see you're feeling overwhelmed. That's totally normal! Want to pick just ONE small thing we can tackle together right now? We don't have to solve everything at once.";
+                    }
+                }
+                
+                if (input.includes('kitchen') || input.includes('dishes') || input.includes('cooking')) {
+                    return "Kitchen Realm adventure! I love exploring the Kitchen Realm with you. What's happening in there? Are we talking about a quick cleanup quest or something bigger?";
+                }
+                
+                if (input.includes('tired') || input.includes('low energy')) {
+                    return "Low energy days are perfect for gentle quests. How about we find something small and satisfying? Even organizing one drawer counts as a victory with me!";
+                }
+                
+                if (input.includes('done') || input.includes('finished') || input.includes('completed')) {
+                    this.recordTaskVictory(userInput);
+                    return "YES! You DID that! I love celebrating victories with you. How did it feel to complete that quest? What should we tackle next, or do you want to rest and enjoy this win?";
+                }
+
+                if (input.includes('procrastinating') || input.includes('avoiding')) {
+                    return "Ah, the old Procrastination Dragon is visiting! I see them lurking around too sometimes. Want to team up against them? Sometimes the best strategy is making the task so small it's almost silly NOT to do it.";
+                }
+
+                if (input.includes('hello') || input.includes('hi')) {
+                    if (recentVictories.length > 0) {
+                        return "Hey! Great to see you again! I remember your recent victories - you've been doing amazing work. What's the adventure today?";
+                    } else {
+                        return "Hello there! Ready for today's adventures? I'm here to help make whatever you're facing feel more manageable and maybe even fun!";
+                    }
+                }
+
+                // Default response with memory integration
+                if (recentVictories.length > 0) {
+                    return "I'm here with you! I remember how accomplished you felt after your recent victories. Tell me what's going on in your world today - whether it's something you want to tackle or something you're avoiding, we can figure it out together.";
+                } else {
+                    return "I'm here with you! Tell me what's going on in your world today. Whether it's something you want to tackle or something you're avoiding, we can figure it out together.";
+                }
+            }
+
+            recordTaskVictory(description) {
+                const task = {
+                    id: Date.now().toString(),
+                    name: description,
+                    completed: true,
+                    timestamp: new Date(),
+                    realm: this.detectRealm(description)
+                };
+                
+                this.taskHistory.push(task);
+                this.saveData();
+            }
+
+            detectRealm(text) {
+                const input = text.toLowerCase();
+                if (input.includes('kitchen') || input.includes('dishes') || input.includes('cooking')) return 'kitchen';
+                if (input.includes('bedroom') || input.includes('living room')) return 'sanctuary';
+                if (input.includes('office') || input.includes('work') || input.includes('desk')) return 'workshop';
+                if (input.includes('exercise') || input.includes('health')) return 'wellness';
+                if (input.includes('family') || input.includes('kids')) return 'family';
+                return 'general';
+            }
+
+            renderMessages() {
+                const container = document.getElementById('chatContainer');
+                container.innerHTML = '';
+                
+                this.messages.forEach(message => {
+                    const messageDiv = document.createElement('div');
+                    messageDiv.className = `message ${message.type}-message`;
+                    
+                    messageDiv.innerHTML = `
+                        <div class="message-text">${message.text}</div>
+                        <div class="timestamp">${new Date(message.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</div>
+                    `;
+                    
+                    container.appendChild(messageDiv);
+                });
+                
+                // Scroll to bottom
+                setTimeout(() => {
+                    container.scrollTop = container.scrollHeight;
+                }, 100);
+            }
+
+            showTyping() {
+                const container = document.getElementById('chatContainer');
+                const typingDiv = document.createElement('div');
+                typingDiv.className = 'message companion-message';
+                typingDiv.id = 'typing-indicator';
+                typingDiv.innerHTML = '<div class="message-text typing">Your companion is thinking</div>';
+                container.appendChild(typingDiv);
+                container.scrollTop = container.scrollHeight;
+            }
+
+            hideTyping() {
+                const typingIndicator = document.getElementById('typing-indicator');
+                if (typingIndicator) {
+                    typingIndicator.remove();
+                }
+            }
+
+            async sendMessage() {
+                const input = document.getElementById('messageInput');
+                const text = input.value.trim();
+                
+                if (!text) return;
+
+                this.addUserMessage(text);
+                input.value = '';
+                this.updateSendButton();
+                
+                this.showTyping();
+                
+                // Generate response after realistic delay
+                setTimeout(() => {
+                    const response = this.generateResponse(text);
+                    this.hideTyping();
+                    this.addCompanionMessage(response);
+                }, 1200 + Math.random() * 800);
+            }
+
+            updateSendButton() {
+                const input = document.getElementById('messageInput');
+                const btn = document.getElementById('sendBtn');
+                btn.disabled = !input.value.trim();
+            }
+
+            updateStatus() {
+                const statusBar = document.getElementById('statusBar');
+                const lastMessage = this.messages[this.messages.length - 1];
+                const lastSync = lastMessage ? new Date(lastMessage.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : 'Never';
+                
+                statusBar.textContent = `Messages: ${this.messages.length} | Memory: ${this.memories.length} items | Last sync: ${lastSync}`;
+            }
+
+            setupEventListeners() {
+                const input = document.getElementById('messageInput');
+                
+                input.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        this.sendMessage();
+                    }
+                });
+
+                input.addEventListener('input', () => {
+                    this.updateSendButton();
+                    // Auto-resize textarea
+                    input.style.height = 'auto';
+                    input.style.height = Math.min(input.scrollHeight, 120) + 'px';
+                });
+            }
+        }
+
+        // Global functions
+        let companion;
+
+        function quickMessage(text) {
+            document.getElementById('messageInput').value = text;
+            companion.sendMessage();
+        }
+
+        function sendMessage() {
+            companion.sendMessage();
+        }
+
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            companion = new LifeboundCompanion();
+            
+            // Enable PWA installation prompt
+            let deferredPrompt;
+            window.addEventListener('beforeinstallprompt', (e) => {
+                e.preventDefault();
+                deferredPrompt = e;
+            });
+        });
+
+        // Debug functions (available in console)
+        window.LifeboundDebug = {
+            showMemory: () => console.table(companion.memories),
+            showTasks: () => console.table(companion.taskHistory),
+            clearData: () => {
+                localStorage.clear();
+                location.reload();
+            },
+            exportData: () => {
+                const data = {
+                    messages: companion.messages,
+                    memories: companion.memories,
+                    tasks: companion.taskHistory,
+                    exported: new Date()
+                };
+                console.log('Lifebound Data Export:', JSON.stringify(data, null, 2));
+                return data;
+            }
+        };
+    </script>
+</body>
+</html>
